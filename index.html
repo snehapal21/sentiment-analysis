@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1 class="page-title">Sentiment Analysis</h1>
+    </header>
+    <main>
+        <section class="input-section">
+            <textarea id="textInput" rows="4" placeholder="Please enter your text..."></textarea>
+            <button onclick="analyzeText()">Analyze</button>
+        </section>
+        <section id="results">
+            <canvas id="sentimentChart" width="400" height="400"></canvas>
+            <div id="percentages" class="percentages-section">
+                <p><strong>Positive:</strong> <span id="positivePercentage">---</span></p>
+                <p><strong>Neutral:</strong> <span id="neutralPercentage">---</span></p>
+                <p><strong>Negative:</strong> <span id="negativePercentage">---</span></p>
+            </div>
+            <p id="sentimentText" class="output-text"></p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Sentiment Analysis. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let chartInstance; 
+
+        function initializeChart() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [0, 0, 0], 
+                        backgroundColor: ['#A8E6CF', '#FFD3B6', '#FF8B94'] 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: 'Sentiment Distribution' },
+                        datalabels: {
+                            display: false 
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = initializeChart;
+
+        function analyzeText() {
+            const text = document.getElementById('textInput').value;
+
+            if (!text.trim()) {
+                alert("Please enter some text.");
+                return;
+            }
+
+            fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                document.getElementById('sentimentText').innerText = `Sentiment: ${data.sentiment}`;
+
+                chartInstance.data.datasets[0].data = [data.scores.pos, data.scores.neu, data.scores.neg];
+                chartInstance.update();
+
+                const total = data.scores.pos + data.scores.neu + data.scores.neg;
+                document.getElementById('positivePercentage').innerText = `${(data.scores.pos / total * 100).toFixed(1)}%`;
+                document.getElementById('neutralPercentage').innerText = `${(data.scores.neu / total * 100).toFixed(1)}%`;
+                document.getElementById('negativePercentage').innerText = `${(data.scores.neg / total * 100).toFixed(1)}%`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
