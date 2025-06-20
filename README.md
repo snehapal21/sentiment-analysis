@@ -34,8 +34,6 @@ This project is a complete sentiment analysis system that processes text data, p
 ├── sentiment_analysis.py    # Main ML/NLP script
 ├── sentimentdataset.csv     # Dataset
 ├── requirements.txt         # Dependencies
-├── render.yaml              # Render deployment config
-│
 ├── templates/
 │   └── index.html           # Webpage layout
 │
